@@ -26,8 +26,16 @@ BASE_DIR = PROJECT_DIR.parent
 INSTALLED_APPS = [
     "home",
     "search",
+    # "blog",
+    # "accounts",
+    # Wagtail contrib
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.search_promotions",
+    "wagtail.contrib.settings",
+    "wagtail.contrib.sitemaps",
+    "wagtail.contrib.routable_page",
+    "wagtail.contrib.typed_table_block",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.users",
@@ -37,8 +45,13 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
+    # Wagtail i18n
+    "wagtail.locales",
+    "wagtail.contrib.simple_translation",
+
     "modelcluster",
     "taggit",
+    # Django
     "django_filters",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -46,6 +59,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
+    "django.contrib.humanize",
+    # Third-party
+    "axes",
 ]
 
 MIDDLEWARE = [
@@ -57,6 +74,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+
+    "django.middleware.locale.LocaleMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -74,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -81,17 +102,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -115,14 +127,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
+LANGUAGE_CODE = "ru"
+LANGUAGES = [
+    ("ru", "Русский"),
+    ("uk", "Українська"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
+TIME_ZONE = "Europe/Kiev"
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
+WAGTAIL_I18N_ENABLED = True
+WAGTAILLOCALES_SHOW_REGION_LABELS = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -133,10 +150,10 @@ STATICFILES_FINDERS = [
 ]
 
 STATICFILES_DIRS = [
-    PROJECT_DIR / "static",
+    BASE_DIR / "static",
 ]
 
-STATIC_ROOT = BASE_DIR / "static"
+STATIC_ROOT = BASE_DIR / "static_collected"
 STATIC_URL = "/static/"
 
 MEDIA_ROOT = BASE_DIR / "media"
@@ -157,10 +174,20 @@ STORAGES = {
 # can exceed this limit within Wagtail's page editor.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 
+# ---------------------------------------------------------------------------
+# Default primary key
+# ---------------------------------------------------------------------------
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Wagtail settings
 
-WAGTAIL_SITE_NAME = "config"
+WAGTAIL_SITE_NAME = "MyBlog"
+WAGTAILADMIN_BASE_URL = "http://localhost:8000"
+WAGTAILIMAGES_FORMAT_CONVERSIONS = {
+    "png": "png",
+    "webp": "webp",
+}
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # Search
 # https://docs.wagtail.org/en/stable/topics/search/backends.html
@@ -169,6 +196,14 @@ WAGTAILSEARCH_BACKENDS = {
         "BACKEND": "wagtail.search.backends.database",
     }
 }
+
+# ---------------------------------------------------------------------------
+# Authentication backends (axes)
+# ---------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
