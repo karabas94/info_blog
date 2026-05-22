@@ -27,21 +27,21 @@ DATABASES = {
 }
 
 # Cache — Redis
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django.core.cache.backends",
-#         "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/1"),
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
-#     }
-# }
-
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+#     }
+# }
 
 # Django Debug Toolbar
 INSTALLED_APPS += ["debug_toolbar"]  # noqa: F405
