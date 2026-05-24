@@ -14,11 +14,10 @@ from wagtail.models import (
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 
-
 from .blocks import BlogBodyBlock
 
+
 # Category snippet (translatable)
-@register_snippet
 class Category(TranslatableMixin, models.Model):
     """Blog category — translatable snippet."""
     name = models.CharField(_("name"), max_length=100)
