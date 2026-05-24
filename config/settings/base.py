@@ -26,8 +26,8 @@ BASE_DIR = PROJECT_DIR.parent
 INSTALLED_APPS = [
     "home",
     "search",
-    # "blog",
-    # "accounts",
+    "blog",
+    "accounts",
     # Wagtail contrib
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
@@ -178,6 +178,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 # Default primary key
 # ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "accounts.User"
 
 # Wagtail settings
 
