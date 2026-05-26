@@ -1,5 +1,3 @@
-from lib2to3.fixes.fix_input import context
-
 from django import template
 from django.utils.translation import get_language
 
