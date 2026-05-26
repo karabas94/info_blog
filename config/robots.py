@@ -7,7 +7,7 @@ def robots_txt(request):
         "User-Agent: *",
         "Disallow: /cms/",
         "Disallow: /ru/search/",
-        "Disallow: /uk/search/",
+        "Disallow: /ua/search/",
         "",
         f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
     ]
