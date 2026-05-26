@@ -1,7 +1,8 @@
-{% load static wagtailcore_tags wagtailuserbar %}
+{% load static wagtailcore_tags wagtailuserbar i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{% if LANGUAGE_CODE == 'ua' %}uk{% else %}{{ LANGUAGE_CODE }}{% endif %}" dir="ltr">
     <head>
         <meta charset="utf-8" />
         <title>
@@ -22,6 +23,16 @@
         {% if request.in_preview_panel %}
         <base target="_blank">
         {% endif %}
+
+            {# hreflang #}
+{#        {% get_language_switcher as lang_links %}#}
+        {% for lang in lang_links %}
+          {% if lang.url %}
+            <link rel="alternate"
+                  hreflang="{% if lang.lang_code == 'ua' %}uk{% else %}{{ lang.lang_code }}{% endif %}"
+                  href="{{ lang.url }}">
+          {% endif %}
+        {% endfor %}
 
         {# Global stylesheets #}
         <link rel="stylesheet" type="text/css" href="{% static 'css/config.css' %}">
