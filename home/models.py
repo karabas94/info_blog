@@ -3,9 +3,10 @@ from django.utils.translation import gettext_lazy as _
 from wagtail.admin.panels import FieldPanel
 from wagtail.fields import RichTextField
 from wagtail.models import Locale, Page
+from blog.models import AutoSlugMixin
 
 
-class HomePage(Page):
+class HomePage(AutoSlugMixin, Page):
     """Site root page"""
 
     intro = RichTextField(_("intro"), blank=True)

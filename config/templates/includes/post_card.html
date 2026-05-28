@@ -1,0 +1,36 @@
+{% load wagtailimages_tags i18n %}
+<article class="post-card">
+  {% if post.main_image %}
+    <a class="post-card__image-link" href="{{ post.url }}" tabindex="-1" aria-hidden="true">
+      {% image post.main_image fill-600x400 as card_img %}
+      <img class="post-card__image"
+           src="{{ card_img.url }}"
+           alt="{{ post.main_image.title }}"
+           width="{{ card_img.width }}"
+           height="{{ card_img.height }}"
+           loading="lazy">
+    </a>
+  {% endif %}
+  <div class="post-card__body">
+    {% if post.category %}
+      <span class="post-card__category">{{ post.category.name }}</span>
+    {% endif %}
+    <h2 class="post-card__title">
+      <a href="{{ post.url }}">{{ post.title }}</a>
+    </h2>
+    {% if post.intro %}
+      <p class="post-card__intro">{{ post.intro|truncatewords:25 }}</p>
+    {% endif %}
+    <div class="post-card__meta">
+      {% if post.author %}
+        <span class="post-card__author">{{ post.author }}</span>
+      {% endif %}
+      {% if post.publication_date %}
+        <time class="post-card__date" datetime="{{ post.publication_date|date:'Y-m-d' }}">
+          {{ post.publication_date|date:"d.m.Y" }}
+        </time>
+      {% endif %}
+    </div>
+    <a class="post-card__link" href="{{ post.url }}">{% trans "Read more" %}</a>
+  </div>
+</article>

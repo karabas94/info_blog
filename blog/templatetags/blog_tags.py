@@ -42,7 +42,7 @@ def get_language_switcher(context):
             {
                 "lang_code": locale.language_code,
                 "lang_name": dict([("ru", "Русский"), ("ua", "Українська")]).get(locale.language_code,
-                                                                                 locale.language_name),
+                                                                                 locale.language_code),
                 "url": url,
                 "is_active": locale.language_code == get_language(),
             }

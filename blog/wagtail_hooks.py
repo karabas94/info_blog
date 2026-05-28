@@ -1,6 +1,9 @@
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
+from django.templatetags.static import static
+from django.utils.html import format_html
+
 
 from .models import Category
 
@@ -25,3 +28,11 @@ def global_admin_css():
       .sidebar-menu-item--active { font-weight: 600; }
     </style>
 """
+
+
+@hooks.register("insert_editor_js")
+def editor_js():
+    return format_html(
+        '<script src="{}?v=3"></script>',
+        static("js/admin-slugify.js")
+    )

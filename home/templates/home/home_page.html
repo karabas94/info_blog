@@ -1,21 +1,65 @@
 {% extends "base.html" %}
-{% load static %}
+{% load i18n wagtailimages_tags wagtailcore_tags %}
 
-{% block body_class %}template-homepage{% endblock %}
-
-{% block extra_css %}
-
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-<link rel="stylesheet" href="{% static 'css/welcome_page.css' %}">
-{% endblock extra_css %}
+{% block title %}{{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }} — {% trans "Home" %}{% endblock %}
 
 {% block content %}
+<div class="hero">
+  <div class="container">
+    {% if page.intro %}
+      <div class="hero__intro">{{ page.intro|richtext }}</div>
+    {% endif %}
+  </div>
+</div>
 
-{% comment %}
-Delete the line below if you're just getting started and want to remove the welcome screen!
-{% endcomment %}
-{% include 'home/welcome_page.html' %}
+<div class="container">
+  {# Categories #}
+  {% if categories %}
+  <section class="home-categories">
+    <h2>{% trans "Categories" %}</h2>
+    <div class="categories-grid">
+      {% for cat in categories %}
+        <div class="category-card">
+          {% if cat.image %}
+            {% image cat.image fill-400x250 as cat_img %}
+            <img src="{{ cat_img.url }}" alt="{{ cat.name }}" loading="lazy">
+          {% endif %}
+          <h3>{{ cat.name }}</h3>
+          {% if cat.description %}<p>{{ cat.description }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
 
-{% endblock content %}
+  {# Recent Posts #}
+  {% if recent_posts %}
+  <section class="home-posts">
+    <h2>{% trans "Recent Posts" %}</h2>
+    <div class="posts-grid">
+      {% for post in recent_posts %}
+        {% include "includes/post_card.html" with post=post %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+{# Schema.org Organization + Blog #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{{ settings.WAGTAIL_SITE_NAME|default:'MyBlog' }}",
+  "url": "{{ request.scheme }}://{{ request.get_host }}"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "{{ settings.WAGTAIL_SITE_NAME|default:'MyBlog' }}",
+  "url": "{{ request.scheme }}://{{ request.get_host }}"
+}
+</script>
+{% endblock %}

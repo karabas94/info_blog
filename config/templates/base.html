@@ -3,55 +3,145 @@
 
 <!DOCTYPE html>
 <html lang="{% if LANGUAGE_CODE == 'ua' %}uk{% else %}{{ LANGUAGE_CODE }}{% endif %}" dir="ltr">
-    <head>
-        <meta charset="utf-8" />
-        <title>
-            {% block title %}
-            {% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}
-            {% endblock %}
-            {% block title_suffix %}
-            {% wagtail_site as current_site %}
-            {% if current_site and current_site.site_name %}- {{ current_site.site_name }}{% endif %}
-            {% endblock %}
-        </title>
-        {% if page.search_description %}
-        <meta name="description" content="{{ page.search_description }}" />
-        {% endif %}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        {# Force all links in the live preview panel to be opened in a new tab #}
-        {% if request.in_preview_panel %}
-        <base target="_blank">
-        {% endif %}
-
-            {# hreflang #}
-{#        {% get_language_switcher as lang_links %}#}
-        {% for lang in lang_links %}
-          {% if lang.url %}
-            <link rel="alternate"
-                  hreflang="{% if lang.lang_code == 'ua' %}uk{% else %}{{ lang.lang_code }}{% endif %}"
-                  href="{{ lang.url }}">
-          {% endif %}
-        {% endfor %}
-
-        {# Global stylesheets #}
-        <link rel="stylesheet" type="text/css" href="{% static 'css/config.css' %}">
-
-        {% block extra_css %}
-        {# Override this in templates to add extra stylesheets #}
+    {#---Title---#}
+    <title>
+        {% block title %}
+            {% if page %}
+                {% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %} — {{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }}
+            {% else %}
+                {{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }}
+            {% endif %}
         {% endblock %}
-    </head>
+    </title>
 
-    <body class="{% block body_class %}{% endblock %}">
-        {% wagtailuserbar %}
+    {# ---- Meta description ---- #}
+    {% block meta_description %}
+        {% if page and page.search_description %}
+            <meta name="description" content="{{ page.search_description }}">
+        {% endif %}
+    {% endblock %}
 
-        {% block content %}{% endblock %}
+    {# ---- Canonical ---- #}
+    {% block canonical %}
+        {% if page %}
+            <link rel="canonical" href="{% if page.canonical_url %}{{ page.canonical_url }}{% else %}{{ page.full_url }}{% endif %}">
+        {% endif %}
+    {% endblock %}
 
-        {# Global javascript #}
-        <script type="text/javascript" src="{% static 'js/config.js' %}"></script>
+    {# ---- hreflang ---- #}
+    {% block hreflang %}
+        {% if page %}
+            {% load blog_tags %}
+            {% get_language_switcher as lang_links %}
+            {% for lang in lang_links %}
+                {% if lang.url %}
+                    <link rel="alternate" hreflang="{% if lang.lang_code == 'ua' %}uk{% else %}{{ lang.lang_code }}{% endif %}" href="{{ lang.url }}">
+                {% endif %}
+            {% endfor %}
+            <link rel="alternate" hreflang="x-default" href="{{ page.full_url }}">
+        {% endif %}
+    {% endblock %}
 
-        {% block extra_js %}
-        {# Override this in templates to add extra javascript #}
-        {% endblock %}
-    </body>
+    {# ---- Open Graph ---- #}
+    {% block og_tags %}
+        {% if page %}
+            <meta property="og:type" content="website">
+            <meta property="og:title" content="{% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}">
+            {% if page.search_description %}
+                <meta property="og:description" content="{{ page.search_description }}">
+            {% endif %}
+            <meta property="og:url" content="{{ page.full_url }}">
+            {% if page.og_image %}
+                {% load wagtailimages_tags %}
+                {% image page.og_image width-1200 as og_img %}
+                <meta property="og:image" content="{{ og_img.url }}">
+            {% elif page.main_image %}
+                {% load wagtailimages_tags %}
+                {% image page.main_image width-1200 as main_og %}
+                <meta property="og:image" content="{{ main_og.url }}">
+            {% endif %}
+        {% endif %}
+    {% endblock %}
+
+    {# ---- Twitter Card ---- #}
+    {% block twitter_tags %}
+        <meta name="twitter:card" content="summary_large_image">
+        {% if page %}
+            <meta name="twitter:title" content="{% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}">
+            {% if page.search_description %}
+                <meta name="twitter:description" content="{{ page.search_description }}">
+            {% endif %}
+        {% endif %}
+    {% endblock %}
+
+    {# ---- Robots (поиск закрыт) ---- #}
+    {% block robots %}
+
+    {% endblock %}
+
+    {# ---- Google Analytics placeholder ---- #}
+    {#    Для подключения Google Analytics в production:#}
+    {#    1. Замените GA_MEASUREMENT_ID на реальный ID#}
+    {#    2. Либо вынесите в отдельный include templates/includes/analytics.html#}
+{#    {% if not debug %}#}
+{#    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>#}
+{#    <script>#}
+{#        window.dataLayer = window.dataLayer || [];#}
+{#        function gtag(){dataLayer.push(arguments);}#}
+{#        gtag('js', new Date());#}
+{#        gtag('config', 'GA_MEASUREMENT_ID');#}
+{#    </script>#}
+{#    {% endif %}#}
+
+    {# ---- Google Search Console verification ---- #}
+    {#Для подтверждения сайта в Google Search Console:#}
+    {#<meta name="google-site-verification" content="YOUR_VERIFICATION_CODE">#}
+
+    {# ---- Favicon ---- #}
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+
+    {# ---- CSS ---- #}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_css %}{% endblock %}
+
+    {# ---- Schema.org: WebSite ---- #}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "{{ settings.WAGTAIL_SITE_NAME|default:'MyBlog' }}",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+    </script>
+
+    {% if request.in_preview_panel %}
+    <base target="_blank">
+    {% endif %}
+
+    {% block extra_head %}
+
+    {% endblock %}
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+    {% wagtailuserbar %}
+
+    {% include "includes/header.html" %}
+
+    <main class="main-content" id="main-content">
+    {% block content %}
+
+    {% endblock %}
+    </main>
+
+    {% include "includes/footer.html" %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
 </html>
