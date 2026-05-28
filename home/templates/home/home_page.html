@@ -14,23 +14,23 @@
 
 <div class="container">
   {# Categories #}
-  {% if categories %}
-  <section class="home-categories">
-    <h2>{% trans "Categories" %}</h2>
-    <div class="categories-grid">
-      {% for cat in categories %}
-        <div class="category-card">
-          {% if cat.image %}
-            {% image cat.image fill-400x250 as cat_img %}
-            <img src="{{ cat_img.url }}" alt="{{ cat.name }}" loading="lazy">
-          {% endif %}
-          <h3>{{ cat.name }}</h3>
-          {% if cat.description %}<p>{{ cat.description }}</p>{% endif %}
-        </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
+{#  {% if categories %}#}
+{#  <section class="home-categories">#}
+{#    <h2>{% trans "Categories" %}</h2>#}
+{#    <div class="categories-grid">#}
+{#      {% for cat in categories %}#}
+{#        <div class="category-card">#}
+{#          {% if cat.image %}#}
+{#            {% image cat.image fill-400x250 as cat_img %}#}
+{#            <img src="{{ cat_img.url }}" alt="{{ cat.name }}" loading="lazy">#}
+{#          {% endif %}#}
+{#          <h3>{{ cat.name }}</h3>#}
+{#          {% if cat.description %}<p>{{ cat.description }}</p>{% endif %}#}
+{#        </div>#}
+{#      {% endfor %}#}
+{#    </div>#}
+{#  </section>#}
+{#  {% endif %}#}
 
   {# Recent Posts #}
   {% if recent_posts %}

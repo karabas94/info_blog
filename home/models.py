@@ -9,6 +9,9 @@ from blog.models import AutoSlugMixin
 class HomePage(AutoSlugMixin, Page):
     """Site root page"""
 
+    parent_page_types = ["wagtailcore.Page"]
+    subpage_types = ["blog.BlogCategoryPage"]
+
     intro = RichTextField(_("intro"), blank=True)
     featured_image = models.ForeignKey(
         "wagtailimages.Image",

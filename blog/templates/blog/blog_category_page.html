@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n wagtailimages_tags wagtailcore_tags %}
+
+{% block content %}
+<div class="container">
+  <header class="page-header">
+    <h1>{{ page.title }}</h1>
+
+    {% if page.intro %}
+      <div class="page-intro">{{ page.intro|richtext }}</div>
+    {% endif %}
+  </header>
+
+  <div class="posts-grid" id="posts-container">
+    {% for post in page_obj %}
+      {% include "includes/post_card.html" with post=post %}
+    {% empty %}
+      <p class="no-posts">{% trans "No posts found." %}</p>
+    {% endfor %}
+  </div>
+
+  {% include "includes/pagination.html" %}
+</div>
+{% endblock %}
