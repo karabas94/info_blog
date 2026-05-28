@@ -5,3 +5,4 @@ redis==5.0.8
 django-redis==5.4.0
 Pillow==10.4.0
 django-axes==7.0.0
+python-slugify[unidecode]==8.0.4

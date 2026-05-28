@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load i18n wagtailimages_tags wagtailcore_tags %}
+
+{% block title %}
+  {{ page.seo_title|default:page.title }} — {{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }}
+{% endblock %}
+
+{% block og_tags %}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ page.seo_title|default:page.title }}">
+  {% if page.search_description %}<meta property="og:description" content="{{ page.search_description }}">{% endif %}
+  <meta property="og:url" content="{{ page.get_canonical_url }}">
+  {% if page.og_image %}
+    {% image page.og_image width-1200 as og_img %}
+    <meta property="og:image" content="{{ og_img.url }}">
+  {% elif page.main_image %}
+    {% image page.main_image width-1200 as main_og %}
+    <meta property="og:image" content="{{ main_og.url }}">
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% include "includes/breadcrumbs.html" %}
+
+  <article class="article" itemscope itemtype="https://schema.org/BlogPosting">
+    <header class="article__header">
+      {% if page.category %}
+        <a class="article__category" href="{{ page.category.pages.first.url|default:'#' }}">
+          {{ page.category.name }}
+        </a>
+      {% endif %}
+      <h1 class="article__title" itemprop="headline">{{ page.title }}</h1>
+      <div class="article__meta">
+        {% if page.author %}
+          <span class="article__author" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">{{ page.author }}</span>
+          </span>
+        {% endif %}
+        {% if page.publication_date %}
+          <time class="article__date" datetime="{{ page.publication_date|date:'Y-m-d' }}" itemprop="datePublished">
+            {{ page.publication_date|date:"d.m.Y" }}
+          </time>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if page.main_image %}
+      <div class="article__main-image">
+        {% image page.main_image width-1200 as hero_img %}
+        <img src="{{ hero_img.url }}"
+             alt="{{ page.main_image.title }}"
+             width="{{ hero_img.width }}"
+             height="{{ hero_img.height }}"
+             itemprop="image">
+      </div>
+    {% endif %}
+
+    {% if page.intro %}
+      <p class="article__intro" itemprop="description">{{ page.intro }}</p>
+    {% endif %}
+
+    <div class="article__body" itemprop="articleBody">
+      {% include_block page.body %}
+    </div>
+  </article>
+</div>
+
+{# Schema.org JSON-LD #}
+<script type="application/ld+json">{{ page.get_breadcrumbs_json }}</script>
+
+{# BreadcrumbList JSON-LD #}
+{% if breadcrumbs %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {% for crumb in breadcrumbs %}
+    {
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ crumb.title }}",
+      "item": "{{ crumb.url }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -15,6 +15,32 @@ from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 
 from .blocks import BlogBodyBlock
+from slugify import slugify as unicode_slugify
+
+from django.utils.text import slugify
+from slugify import slugify as unicode_slugify
+
+from slugify import slugify as unicode_slugify
+
+
+class AutoSlugMixin:
+    """Транслитерирует slug страницы из title перед сохранением в Wagtail."""
+
+    def clean(self):
+        super().clean()
+
+        if not self.title:
+            return
+
+        # Если slug пустой или содержит кириллицу/не-ASCII символы
+        try:
+            self.slug.encode("ascii")
+            slug_is_ascii = True
+        except UnicodeEncodeError:
+            slug_is_ascii = False
+
+        if not self.slug or not slug_is_ascii:
+            self.slug = unicode_slugify(self.title, allow_unicode=False)
 
 
 # Category snippet (translatable)
@@ -90,7 +116,7 @@ class Category(TranslatableMixin, models.Model):
 
 
 # Blog Index Page
-class BlogIndexPage(RoutablePageMixin, Page):
+class BlogIndexPage(AutoSlugMixin, RoutablePageMixin, Page):
     """Blog listing page."""
     intro = RichTextField(_("intro"), blank=True)
     posts_per_page = models.PositiveIntegerField(_("posts per page"), default=12)
@@ -130,7 +156,7 @@ class BlogIndexPage(RoutablePageMixin, Page):
 
 # Blog Category Page
 
-class BlogCategoryPage(RoutablePageMixin, Page):
+class BlogCategoryPage(AutoSlugMixin, RoutablePageMixin, Page):
     """Page for a single category listing."""
 
     category = models.ForeignKey(
@@ -178,7 +204,7 @@ class BlogCategoryPage(RoutablePageMixin, Page):
 
 
 # Blog Detail Page (Article)
-class BlogDetailPage(Page):
+class BlogDetailPage(AutoSlugMixin, Page):
     """Blog article page."""
     # content
     intro = models.TextField(_("intro/excerpt"), blank=True, max_length=500)
@@ -265,6 +291,36 @@ class BlogDetailPage(Page):
     class Meta:
         verbose_name = _("blog post")
         verbose_name_plural = _("blog posts")
+
+    def get_breadcrumbs(self):
+        crumbs = [{"title": "Home", "url": self.get_site().root_page.full_url}]
+        blog_index = BlogIndexPage.objects.live().public().filter(locale=self.locale).first()
+        if blog_index:
+            crumbs.append({"title": blog_index.title, "url": blog_index.full_url})
+        if self.category:
+            cat_page = self.category.pages.live().public().filter(locale=self.locale).first()
+            if cat_page:
+                crumbs.append({"title": self.category.name, "url": cat_page.full_url})
+        crumbs.append({"title": self.title, "url": self.full_url})
+        return crumbs
+
+    def get_breadcrumbs_json(self):
+        items = []
+        for i, crumb in enumerate(self.get_breadcrumbs(), 1):
+            items.append({
+                "@type": "ListItem",
+                "position": i,
+                "name": crumb["title"],
+                "item": crumb["url"],
+            })
+        return json.dumps(
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": items,
+            },
+            ensure_ascii=False,
+        )
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)

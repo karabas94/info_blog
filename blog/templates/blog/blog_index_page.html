@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n wagtailcore_tags wagtailimages_tags static %}
+
+{% block title %}
+  {% if page_obj.number > 1 %}
+    {{ page.seo_title|default:page.title }} — {% blocktrans with num=page_obj.number %}Page {{ num }}{% endblocktrans %} — {{ settings.WAGTAIL_SITE_NAME }}
+  {% else %}
+    {{ page.seo_title|default:page.title }} — {{ settings.WAGTAIL_SITE_NAME }}
+  {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+  {% if page_obj.number > 1 %}
+    <meta name="description" content="{{ page.search_description|default:page.intro|truncatewords:25 }} — {% blocktrans with num=page_obj.number %}Page {{ num }}{% endblocktrans %}">
+  {% else %}
+    {% if page.search_description or page.intro %}
+      <meta name="description" content="{{ page.search_description|default:page.intro|truncatewords:25 }}">
+    {% endif %}
+  {% endif %}
+{% endblock %}
+
+{% block canonical %}
+  <link rel="canonical" href="{{ page.full_url }}{% if page_obj.number > 1 %}?page={{ page_obj.number }}{% endif %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% include "includes/breadcrumbs.html" %}
+
+  <header class="page-header">
+    <h1>{{ page.title }}</h1>
+    {% if page.intro %}<div class="page-intro">{{ page.intro|richtext }}</div>{% endif %}
+  </header>
+
+  {# Фильтр по категориям #}
+  {% if categories %}
+  <div class="category-filter">
+    <ul class="category-filter__list">
+      {% for cat in categories %}
+        <li>
+          {% with cat_page=cat.pages.first %}
+            {% if cat_page %}
+              <a class="category-filter__link" href="{{ cat_page.url }}">{{ cat.name }}</a>
+            {% else %}
+              <span class="category-filter__link">{{ cat.name }}</span>
+            {% endif %}
+          {% endwith %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {# Сетка постов #}
+  <div class="posts-grid" id="posts-container">
+    {% for post in page_obj %}
+      {% include "includes/post_card.html" with post=post %}
+    {% empty %}
+      <p class="no-posts">{% trans "No posts found." %}</p>
+    {% endfor %}
+  </div>
+
+  {% include "includes/pagination.html" %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/load-more.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load i18n %}
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand">
+        <strong>MyBlog</strong>
+        <p>{% trans "A simple, fast blog." %}</p>
+      </div>
+      <div class="site-footer__contact">
+        <p>{% trans "Contact:" %} <a href="mailto:hello@myblog.example">hello@myblog.example</a></p>
+      </div>
+      <div class="site-footer__copy">
+        <p>&copy; {% now "Y" %} MyBlog. {% trans "All rights reserved." %}</p>
+      </div>
+    </div>
+  </div>
+</footer>
