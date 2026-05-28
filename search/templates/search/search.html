@@ -1,38 +1,48 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load i18n %}
 
-{% block body_class %}template-searchresults{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
-{% block title %}Search{% endblock %}
+{% block title %}
+  {% if search_query %}
+    {% trans "Search results for:" %} {{ search_query }} — {{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }}
+  {% else %}
+    {% trans "Search" %} — {{ settings.WAGTAIL_SITE_NAME|default:"MyBlog" }}
+  {% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>Search</h1>
+<div class="container search-results">
+  {% include "includes/breadcrumbs.html" %}
 
-<form action="{% url 'search' %}" method="get">
-    <input type="text" name="query"{% if search_query %} value="{{ search_query }}"{% endif %}>
-    <input type="submit" value="Search" class="button">
-</form>
+  <h1>{% trans "Search" %}</h1>
 
-{% if search_results %}
-<ul>
-    {% for result in search_results %}
-    <li>
-        <h4><a href="{% pageurl result %}">{{ result }}</a></h4>
-        {% if result.search_description %}
-        {{ result.search_description }}
-        {% endif %}
-    </li>
-    {% endfor %}
-</ul>
+  <form class="search-form" action="{% url 'search' %}" method="get" role="search">
+    <div class="search-input-group">
+      <input type="search"
+             name="query"
+             value="{{ search_query }}"
+             placeholder="{% trans 'Search' %}"
+             aria-label="{% trans 'Search articles' %}">
+      <button class="btn btn--primary" type="submit">{% trans "Search" %}</button>
+    </div>
+  </form>
 
-{% if search_results.has_previous %}
-<a href="{% url 'search' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.previous_page_number }}">Previous</a>
-{% endif %}
-
-{% if search_results.has_next %}
-<a href="{% url 'search' %}?query={{ search_query|urlencode }}&amp;page={{ search_results.next_page_number }}">Next</a>
-{% endif %}
-{% elif search_query %}
-No results found
-{% endif %}
+  {% if search_results %}
+    <p class="search-results__count">
+      {% blocktrans count count=search_results.count %}
+        Found {{ count }} result
+      {% plural %}
+        Found {{ count }} results
+      {% endblocktrans %}
+    </p>
+    <div class="posts-grid">
+      {% for result in search_results %}
+        {% include "includes/post_card.html" with post=result %}
+      {% endfor %}
+    </div>
+  {% elif search_query %}
+    <p class="no-posts">{% trans "No posts found." %}</p>
+  {% endif %}
+</div>
 {% endblock %}
