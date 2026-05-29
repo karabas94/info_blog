@@ -15,6 +15,7 @@ def search(request):
             BlogDetailPage.objects.live()
             .public()
             .filter(locale=Locale.get_active())
+            .select_related("category", "author", "main_image")
             .search(search_query)
         )
 

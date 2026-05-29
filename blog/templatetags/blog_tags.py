@@ -1,8 +1,7 @@
 from django import template
 from django.utils.translation import get_language
-
-from blog.models import Category
-from wagtail.models import Locale
+from blog.models import Category, BlogCategoryPage
+from wagtail.models import Locale, Page
 
 register = template.Library()
 
@@ -37,35 +36,78 @@ def get_language_switcher(context):
     if not request:
         return []
 
+    cache_attr = f"_language_switcher_cache_{getattr(page, 'id', 'none')}"
+
+    cached = getattr(request, cache_attr, None)
+    if cached is not None:
+        return cached
+
     language_names = {
         "ru": "Русский",
         "ua": "Українська",
     }
 
+    current_language = get_language()
+
+    locales = list(
+        Locale.objects.filter(language_code__in=["ru", "ua"])
+        .order_by("language_code")
+    )
+
+    locale_ids = [locale.id for locale in locales]
+
+    page_translations = {}
+
+    if page and getattr(page, "translation_key", None):
+        translations_qs = (
+            Page.objects.live()
+            .filter(
+                translation_key=page.translation_key,
+                locale_id__in=locale_ids,
+            )
+        )
+
+        page_translations = {
+            translation.locale_id: translation
+            for translation in translations_qs
+        }
+
+    missing_locale_ids = [
+        locale.id
+        for locale in locales
+        if locale.id not in page_translations
+    ]
+
+    root_translations = {}
+
+    if missing_locale_ids and getattr(request, "site", None):
+        root_page = request.site.root_page
+
+        root_qs = (
+            Page.objects.live()
+            .filter(
+                translation_key=root_page.translation_key,
+                locale_id__in=missing_locale_ids,
+            )
+        )
+
+        root_translations = {
+            translation.locale_id: translation
+            for translation in root_qs
+        }
+
     result = []
 
-    for locale in Locale.objects.all():
-        url = None
+    for locale in locales:
+        target_page = page_translations.get(locale.id)
 
-        # 1. Пробуем найти перевод текущей страницы
-        if page:
-            try:
-                translation = page.get_translation(locale)
+        if not target_page:
+            target_page = root_translations.get(locale.id)
 
-                if translation and translation.live and translation.url:
-                    url = translation.url
-            except Exception:
-                url = None
-
-        # 2. Если перевода нет — ведём на главную этого языка
-        if not url:
-            try:
-                root_page = request.site.root_page.get_translation(locale)
-
-                if root_page and root_page.url:
-                    url = root_page.url
-            except Exception:
-                url = f"/{locale.language_code}/"
+        if target_page:
+            url = target_page.get_url(request)
+        else:
+            url = f"/{locale.language_code}/"
 
         result.append(
             {
@@ -75,29 +117,42 @@ def get_language_switcher(context):
                     locale.language_code,
                 ),
                 "url": url,
-                "is_active": locale.language_code == get_language(),
+                "is_active": locale.language_code == current_language,
             }
         )
+
+    setattr(request, cache_attr, result)
 
     return result
 
 
 @register.simple_tag(takes_context=True)
 def get_category_pages(context):
-    from wagtail.models import Locale
-    from blog.models import BlogCategoryPage
     request = context.get("request")
-    locale = Locale.get_active()
+    page = context.get("page")
+
+    # Самый быстрый вариант:
+    # если мы уже на Wagtail-странице, у неё уже есть locale_id.
+    # Значит не надо делать Locale.get_active() и лезть в wagtailcore_locale.
+    locale_id = getattr(page, "locale_id", None)
+
+    # Запасной вариант, если page вдруг нет.
+    # В обычных Wagtail-страницах он почти не должен срабатывать.
+    if not locale_id:
+        language_code = getattr(request, "LANGUAGE_CODE", None) if request else None
+
+        if not language_code:
+            from django.utils.translation import get_language
+            language_code = get_language()
+
+        locale = Locale.objects.only("id").get(language_code=language_code)
+        locale_id = locale.id
+
     pages = (
         BlogCategoryPage.objects.live()
-        .public()
-        .filter(locale=locale)
+        .filter(locale_id=locale_id)
+        .order_by("title")
+        .specific()
     )
-    site = getattr(request, "site", None) if request else None
-    if site and site.root_page:
-        try:
-            root_page = site.root_page.get_translation(locale)
-            pages = pages.descendant_of(root_page)
-        except Exception:
-            pass
-    return pages.specific().order_by("title")
+
+    return pages

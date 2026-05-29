@@ -14,9 +14,7 @@ from wagtail.models import (
 )
 from wagtail.search import index
 
-
 from .blocks import BlogBodyBlock
-
 
 from slugify import slugify as unicode_slugify
 
@@ -75,44 +73,6 @@ class Category(TranslatableMixin, models.Model):
         return self.name
 
 
-# # Home Page
-# class HomePage(Page):
-#     """Site root page"""
-#
-#     intro = RichTextField(_("intro"), blank=True)
-#     featured_image = models.ForeignKey(
-#         "wagtailimages.Image",
-#         null=True,
-#         blank=True,
-#         on_delete=models.SET_NULL,
-#         related_name="+",
-#         verbose_name=_("featured image")
-#     )
-#
-#     content_panels = Page.content_panels + [
-#         FieldPanel("intro"),
-#         FieldPanel("featured_image"),
-#     ]
-#
-#     class Meta:
-#         verbose_name = _("home page")
-#
-#     def get_context(self, request, *args, **kwargs):
-#         context = super().get_context(request, *args, **kwargs)
-#         # Последние 6 статей для главной страницы
-#         context["recent_posts"] = (
-#             BlogDetailPage.objects.live()
-#             .public()
-#             .filter(locale=Locale.get_active())
-#             .select_related("category", "author", "main_image")
-#             .order_by("-publication_date")[:6]
-#         )
-#         context["categories"] = (
-#             Category.objects.filter(locale=Locale.get_active()).order_by("order", "name")
-#         )
-#         return context
-
-
 # Blog Index Page
 class BlogIndexPage(AutoSlugMixin, RoutablePageMixin, Page):
     """Blog listing page."""
@@ -132,7 +92,6 @@ class BlogIndexPage(AutoSlugMixin, RoutablePageMixin, Page):
     def get_posts(self):
         return (
             BlogDetailPage.objects.live()
-            .public()
             .filter(locale=Locale.get_active())
             .select_related("category", "author", "main_image")
             .order_by("-publication_date")
@@ -198,10 +157,9 @@ class BlogCategoryPage(AutoSlugMixin, RoutablePageMixin, Page):
     def get_posts(self):
         return (
             BlogDetailPage.objects.live()
-            .public()
             .child_of(self)
             .filter(locale=self.locale)
-            .select_related("author", "main_image")
+            .select_related("category", "author", "main_image", "og_image")
             .order_by("-publication_date")
         )
 
@@ -216,7 +174,6 @@ class BlogCategoryPage(AutoSlugMixin, RoutablePageMixin, Page):
 
         context["page_obj"] = page_obj
         context["paginator"] = paginator
-        context["categories"] = Category.objects.filter(locale=Locale.get_active()).order_by("order")
         context["breadcrumbs"] = self.get_breadcrumbs()
         return context
 
@@ -466,10 +423,6 @@ class BlogDetailPage(AutoSlugMixin, Page):
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
-
-        context["categories"] = Category.objects.filter(
-            locale=Locale.get_active()
-        ).order_by("order")
 
         context["category_page"] = self.get_category_page()
         context["category_name"] = self.get_category_name()
