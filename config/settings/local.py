@@ -66,6 +66,10 @@ WAGTAILSEARCH_BACKENDS = {
     }
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://192.168.0.197:8000",
+]
+
 # try:
 #     from .local import *
 # except ImportError:

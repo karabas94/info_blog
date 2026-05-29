@@ -35,10 +35,9 @@ class HomePage(AutoSlugMixin, Page):
         context = super().get_context(request, *args, **kwargs)
         context["recent_posts"] = (
             BlogDetailPage.objects.live()
-            .public()
             .filter(locale=Locale.get_active())
             .select_related("category", "author", "main_image")
-            .order_by("-publication_date")[:6]
+            .order_by("-publication_date")[:24]
         )
         context["categories"] = Category.objects.filter(
             locale=Locale.get_active()
